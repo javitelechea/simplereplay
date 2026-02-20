@@ -36,9 +36,9 @@ const DemoData = (() => {
         // Demo game
         const game1 = {
             id: 'game-demo-1',
-            title: 'vs River Plate — Fecha 12',
-            youtube_video_id: 'LXb3EKWsInQ',
-            created_by: 'demo-user-001',
+            title: 'Argentina - EEUU',
+            youtube_video_id: 'ZabnNjou_PI',
+            created_by: 'Demo',
             created_at: new Date().toISOString()
         };
         games.push(game1);
