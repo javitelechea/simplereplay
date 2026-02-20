@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimpleReplay — Video Analysis</title>
+  <meta name="description"
+    content="Aplicación de videoanálisis deportivo. Analiza partidos, crea clips, playlists y marca jugadas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body>
+  <!-- ═══════ HEADER ═══════ -->
+  <header id="app-header">
+    <div class="header-left">
+      <svg class="logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="6" fill="url(#logoGrad)" />
+        <polygon points="11,7 22,14 11,21" fill="#fff" />
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
+            <stop offset="0%" stop-color="#6366f1" />
+            <stop offset="100%" stop-color="#06b6d4" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 class="app-title">SimpleReplay</h1>
+    </div>
+
+    <div class="header-center">
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-btn active" data-mode="analyze" id="btn-mode-analyze">
+          <span class="mode-icon">🎯</span> Analizar
+        </button>
+        <button class="mode-btn" data-mode="view" id="btn-mode-view">
+          <span class="mode-icon">▶️</span> Ver
+        </button>
+        <div class="mode-slider" id="mode-slider"></div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <select id="game-selector" class="game-select">
+        <option value="">— Seleccionar partido —</option>
+      </select>
+      <button id="btn-new-game" class="btn btn-primary btn-sm">+ Partido</button>
+      <div class="header-divider"></div>
+      <button id="btn-save-project" class="btn btn-save btn-sm" title="Guardar proyecto">💾 Guardar</button>
+      <button id="btn-share-project" class="btn btn-share btn-sm" title="Compartir link" style="display:none;">🔗
+        Compartir</button>
+      <button id="btn-my-projects" class="btn btn-projects btn-sm" title="Mis proyectos">📂 Proyectos</button>
+    </div>
+  </header>
+
+  <!-- ═══════ MAIN LAYOUT ═══════ -->
+  <main id="app-main">
+    <!-- Video Area -->
+    <section id="video-area">
+      <div id="player-container">
+        <div id="youtube-player"></div>
+        <div id="no-game-overlay" class="player-overlay">
+          <div class="overlay-content">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 4" opacity="0.4" />
+              <polygon points="26,18 48,32 26,46" fill="#6366f1" opacity="0.5" />
+            </svg>
+            <p>Selecciona o crea un partido para empezar</p>
+          </div>
+        </div>
+        <!-- Focus View Overlay -->
+        <div id="focus-overlay" class="focus-overlay hidden">
+          <div class="focus-info">
+            <span id="focus-clip-name" class="focus-clip-name"></span>
+            <span id="focus-clip-flags" class="focus-clip-flags"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Tag rows + Clip edit controls (visible in analyze mode) -->
+      <div id="tag-bar" class="tag-bar hidden">
+        <div class="tag-bar-header">
+          <div class="tag-rows-wrap">
+            <div class="tag-team-row">
+              <div id="tag-buttons-a" class="tag-buttons-row"></div>
+            </div>
+            <div class="tag-team-row tag-row-rival">
+              <div id="tag-buttons-b" class="tag-buttons-row"></div>
+            </div>
+          </div>
+          <button id="btn-toggle-tag-editor" class="btn btn-xs btn-ghost tag-editor-toggle"
+            title="Editar tags">✏️</button>
+        </div>
+        <div class="clip-edit-group" id="clip-edit-controls" style="display:none;">
+          <span class="ctrl-label">IN:</span>
+          <button class="btn btn-xs btn-outline" data-action="in-minus">−1s</button>
+          <button class="btn btn-xs btn-outline" data-action="in-plus">+1s</button>
+          <span class="ctrl-separator">|</span>
+          <span class="ctrl-label">OUT:</span>
+          <button class="btn btn-xs btn-outline" data-action="out-minus">−1s</button>
+          <button class="btn btn-xs btn-outline" data-action="out-plus">+1s</button>
+          <span class="ctrl-separator">|</span>
+          <button class="btn btn-xs btn-danger" data-action="delete-clip">🗑️</button>
+        </div>
+        <!-- Inline tag editor (shows for one tag at a time) -->
+        <div id="tag-editor-inline" class="tag-editor-inline" style="display:none;">
+          <div class="tag-editor-inline-row">
+            <label class="editor-lbl">Nombre</label>
+            <input id="edit-tag-label" type="text" class="input-sm" placeholder="Nombre" />
+            <label class="editor-lbl">Pre</label>
+            <input id="edit-tag-pre" type="number" class="input-sm tag-edit-num" min="0" max="30" />
+            <label class="editor-lbl">Post</label>
+            <input id="edit-tag-post" type="number" class="input-sm tag-edit-num" min="0" max="30" />
+            <select id="edit-tag-row" class="input-sm tag-edit-row-select">
+              <option value="top">Propio</option>
+              <option value="bottom">Rival</option>
+            </select>
+            <button id="btn-save-tag" class="btn btn-xs btn-primary">Guardar</button>
+            <button id="btn-delete-tag" class="btn btn-xs btn-danger">🗑️</button>
+            <button id="btn-cancel-tag-edit" class="btn btn-xs btn-ghost">✕</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Side Panel -->
+    <aside id="side-panel" class="side-panel">
+      <button id="btn-collapse-panel" class="btn-collapse" title="Colapsar panel">
+        <span class="collapse-icon">›</span>
+      </button>
+
+      <!-- ═══ ANALYZE MODE PANEL ═══ -->
+      <div id="panel-analyze" class="panel-content">
+        <div class="panel-section">
+          <h3 class="section-title">
+            Clips del partido
+            <span id="clip-count" class="badge">0</span>
+          </h3>
+          <div id="analyze-clip-list" class="clip-list"></div>
+        </div>
+        <div class="panel-section">
+          <h3 class="section-title">Playlists</h3>
+          <div class="playlist-create-row">
+            <input id="new-playlist-name" type="text" placeholder="Nombre de playlist…" class="input-sm" />
+            <button id="btn-create-playlist" class="btn btn-sm btn-primary">+</button>
+          </div>
+          <div id="analyze-playlists" class="playlist-list"></div>
+        </div>
+      </div>
+
+      <!-- ═══ VIEW MODE PANEL ═══ -->
+      <div id="panel-view" class="panel-content hidden">
+        <!-- Source selector: compact, collapsible -->
+        <div class="panel-section panel-section-fixed">
+          <div class="source-selector">
+            <button class="source-btn active" data-source="all" id="src-all">Partido completo</button>
+            <div class="source-group">
+              <button class="source-group-toggle" data-toggle="source-tags-list">
+                <span class="toggle-arrow">▸</span> Tags
+              </button>
+              <div id="source-tags-list" class="source-group-body collapsed">
+                <div id="source-tags"></div>
+              </div>
+            </div>
+            <div class="source-group">
+              <button class="source-group-toggle" data-toggle="source-playlists-list">
+                <span class="toggle-arrow">▸</span> Playlists
+              </button>
+              <div id="source-playlists-list" class="source-group-body collapsed">
+                <div id="source-playlists"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Active filter chips (dynamically populated by JS) -->
+          <div id="active-filter-chip" class="filter-chips-container" style="display:none;"></div>
+          <button id="btn-reset-all-filters" class="btn btn-xs btn-ghost btn-reset-filters" style="display:none;"
+            title="Limpiar todos los filtros">❌ Limpiar filtros</button>
+        </div>
+        <!-- Flags -->
+        <div class="panel-section panel-section-fixed">
+          <h3 class="section-title">
+            Flags
+            <button id="btn-clear-flag-filter" class="btn btn-xs btn-ghost" style="display:none;">Limpiar</button>
+          </h3>
+          <div class="flag-filter-bar" id="flag-filter-bar">
+            <button class="flag-btn" data-flag="bueno" title="1 = Bueno">👍</button>
+            <button class="flag-btn" data-flag="acorregir" title="2 = A corregir">⚠️</button>
+            <button class="flag-btn" data-flag="duda" title="3 = Duda">❓</button>
+            <button class="flag-btn" data-flag="importante" title="4 = Importante">⭐</button>
+            <button class="flag-btn" data-flag="has_chat" title="Con comentarios">💬</button>
+          </div>
+        </div>
+        <!-- Clips (scrolls independently) -->
+        <div class="panel-section flex-grow">
+          <h3 class="section-title">
+            Clips
+            <span id="view-clip-count" class="badge">0</span>
+          </h3>
+          <div id="view-clip-list" class="clip-list"></div>
+          <!-- Selection action bar -->
+          <div id="view-selection-bar" class="view-selection-bar" style="display:none;">
+            <span><span id="view-selected-count">0</span> seleccionados</span>
+            <button id="btn-add-selected-to-playlist" class="btn btn-xs btn-primary">📋 Agregar a playlist</button>
+          </div>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-focus-view" class="btn btn-sm btn-ghost">
+            <span>🔍</span> Vista Foco
+          </button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ═══════ NEW GAME MODAL ═══════ -->
+  <div id="modal-new-game" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <h2>Nuevo Partido</h2>
+      <label class="form-label">
+        Título
+        <input id="input-game-title" type="text" class="input" placeholder="Ej: vs River Plate — Fecha 12" />
+      </label>
+      <label class="form-label">
+        YouTube Video ID
+        <input id="input-youtube-id" type="text" class="input" placeholder="Pegá el link de YouTube acá" />
+        <span class="form-hint">Podés pegar el link completo (ej: https://www.youtube.com/watch?v=...) o solo el
+          ID</span>
+      </label>
+      <div class="modal-actions">
+        <button id="btn-cancel-game" class="btn btn-ghost">Cancelar</button>
+        <button id="btn-save-game" class="btn btn-primary">Crear partido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ ADD TO PLAYLIST MODAL ═══════ -->
+  <div id="modal-add-to-playlist" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box modal-sm">
+      <h2>Agregar a Playlist</h2>
+      <div id="playlist-select-list" class="playlist-select-list"></div>
+      <div class="modal-actions">
+        <button id="btn-cancel-add-playlist" class="btn btn-ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ COLLAPSED PANEL BUTTON ═══════ -->
+  <button id="btn-expand-panel" class="btn-expand hidden" title="Mostrar panel">‹</button>
+
+  <!-- Navigation arrows overlay -->
+  <div id="nav-arrows" class="nav-arrows hidden">
+    <button id="btn-prev-clip" class="nav-arrow nav-arrow-left" title="Clip anterior (←)">‹</button>
+    <button id="btn-next-clip" class="nav-arrow nav-arrow-right" title="Clip siguiente (→)">›</button>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Project list modal -->
+  <div id="modal-projects" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <h3 style="margin-bottom:12px;">📂 Mis Proyectos</h3>
+      <div id="project-list" class="project-list">
+        <p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:16px;">Cargando...</p>
+      </div>
+      <div style="margin-top:12px;text-align:right;">
+        <button id="btn-close-projects" class="btn btn-sm btn-ghost">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/firebaseData.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/demoData.js"></script>
+  <script src="js/youtubePlayer.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
