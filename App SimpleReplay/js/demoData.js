@@ -44,18 +44,18 @@ const DemoData = (() => {
         games.push(game1);
 
         // Demo clips
-        const demoClips = [
-            { tag: 'tag-salida', t: 45 },
-            { tag: 'tag-ataque', t: 120 },
-            { tag: 'tag-area-ec', t: 198 },
-            { tag: 'tag-bloqueo', t: 310 },
-            { tag: 'tag-gol', t: 480 },
-            { tag: 'tag-contragolpe-ec', t: 560 },
-            { tag: 'tag-salida', t: 710 },
-            { tag: 'tag-cc-at', t: 850 },
-            { tag: 'tag-defensa', t: 950 },
-            { tag: 'tag-area', t: 1100 },
-        ];
+const demoClips = [
+    { tag: 'tag-salida', t: 501 },          // 8:21
+    { tag: 'tag-ataque', t: 522 },          // 8:42
+    { tag: 'tag-area-ec', t: 758 },         // 12:38
+    { tag: 'tag-bloqueo', t: 557 },         // 9:17
+    { tag: 'tag-gol', t: 1567 },            // 26:07
+    { tag: 'tag-contragolpe-ec', t: 654 },  // 10:54
+    { tag: 'tag-salida', t: 575 },          // 9:35
+    { tag: 'tag-cc-at', t: 970 },           // 16:10
+    { tag: 'tag-defensa', t: 688 },         // 11:28
+    { tag: 'tag-area', t: 601 },            // 10:01
+];
 
         demoClips.forEach(dc => {
             const tag = tagTypes.find(t => t.id === dc.tag);
